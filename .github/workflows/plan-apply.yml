@@ -1,0 +1,35 @@
+name: OpenTofu plan/apply (mock)
+
+  on:
+    pull_request:
+    push:
+      branches: [main]
+
+  jobs:
+    plan:
+      runs-on: ubuntu-latest
+      environment: plan
+      steps:
+        - name: Mock tofu plan
+          run: echo "tofu plan would run here (read-only)"
+        - name: Prove we cannot see the apply secret
+          run: |
+            if [ -z "${{ secrets.TF_API_TOKEN }}" ]; then
+              echo "TF_API_TOKEN is EMPTY here - as it should be"
+            else
+              echo "TF_API_TOKEN is visible - something is wrong!"
+            fi
+
+    apply:
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      needs: plan
+      runs-on: ubuntu-latest
+      environment: apply
+      steps:
+        - name: Mock tofu apply
+          run: echo "tofu apply would run here"
+        - name: Prove the secret exists here
+          run: |
+            if [ -n "${{ secrets.TF_API_TOKEN }}" ]; then
+              echo "TF_API_TOKEN is present (value is masked by GitHub)"
+            fi
